@@ -1,25 +1,43 @@
 const express = require("express");
 const fs = require("fs");
+const morgan = require("morgan");
+
 const app = express();
 
-app.use(express.json()); //Middleware
+//Middleware
+app.use(morgan("dev"));
+app.use(express.json());
 
+app.use((req, res, next) => {
+  console.log("Hello from middleware");
+  next();
+});
+
+app.use((req, res, next) => {
+  req.requestTime = new Date().toISOString();
+  next();
+});
+
+//Data
 const tours = JSON.parse(
   fs.readFileSync(`${__dirname}/dev-data/data/tours-simple.json`)
 );
 
-//GET REQUEST
-app.get("/api/v1/tours", (req, res) => {
+//Route Handlers
+
+const getAllTours = (req, res) => {
+  console.log(req.requestTime);
   res.status(200).json({
     status: "Success",
+    requesteAt: req.requestTime,
     results: tours.length,
     data: {
       tours: tours,
     },
   });
-});
+};
 
-app.get("/api/v1/tours/:id", (req, res) => {
+const getTour = (req, res) => {
   const id = req.params.id * 1;
 
   if (id >= tours.length) {
@@ -37,10 +55,9 @@ app.get("/api/v1/tours/:id", (req, res) => {
       tour: tour,
     },
   });
-});
+};
 
-//POST REQUEST
-app.post("/api/v1/tours", (req, res) => {
+const createTour = (req, res) => {
   const newId = tours[tours.length - 1].id + 1;
   const newTour = Object.assign({ id: newId }, req.body);
 
@@ -58,10 +75,9 @@ app.post("/api/v1/tours", (req, res) => {
       });
     }
   );
-});
+};
 
-//UPDATE request using PATCH method
-app.patch("/api/v1/tours/:id", (req, res) => {
+const updateTour = (req, res) => {
   const id = req.params.id * 1;
 
   if (id >= tours.length) {
@@ -77,10 +93,9 @@ app.patch("/api/v1/tours/:id", (req, res) => {
       tour: "Updated tours object successfully",
     },
   });
-});
+};
 
-//DELETE Method
-app.delete("/api/v1/tours/:id", (req, res) => {
+const deleteTour = (req, res) => {
   const id = req.params.id * 1;
 
   if (id >= tours.length) {
@@ -94,8 +109,60 @@ app.delete("/api/v1/tours/:id", (req, res) => {
     status: "Success",
     data: null,
   });
-});
+};
 
+const getAllUsers = (req, res) => {
+  res.status(500).json({
+    status: "Error",
+    message: "This route is not yet created",
+  });
+};
+
+const createUser = (req, res) => {
+  res.status(500).json({
+    status: "Error",
+    message: "This route is not yet created",
+  });
+};
+
+const getUser = (req, res) => {
+  res.status(500).json({
+    status: "Error",
+    message: "This route is not yet created",
+  });
+};
+
+const updateUser = (req, res) => {
+  res.status(500).json({
+    status: "Error",
+    message: "This route is not yet created",
+  });
+};
+
+const deleteUser = (req, res) => {
+  res.status(500).json({
+    status: "Error",
+    message: "This route is not yet created",
+  });
+};
+
+//Routes
+app.route("/api/v1/tours/").get(getAllTours).post(createTour);
+
+app
+  .route("/api/v1/tours/:id")
+  .get(getTour)
+  .patch(updateTour)
+  .delete(deleteTour);
+
+app.route("/api/v1/users").get(getAllUsers).post(createUser);
+
+app
+  .route("/api/v1/users/:id")
+  .get(getUser)
+  .patch(updateUser)
+  .delete(deleteUser);
+//Server starts here
 const port = 3000;
 app.listen(port, () => {
   console.log("App listening on port: 3000");
