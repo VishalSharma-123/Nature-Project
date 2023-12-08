@@ -1,5 +1,5 @@
 const Tour = require(`${__dirname}/../models/tourModels.js`);
-const APIFeatures = require(`${__dirname}/../utils/apifeatures.js`);
+const APIFeatures = require(`${__dirname}/../utils/apiFeatures.js`);
 const catchAsync = require(`${__dirname}/../utils/catchAsync.js`);
 const AppError = require(`${__dirname}/../utils/appError.js`);
 

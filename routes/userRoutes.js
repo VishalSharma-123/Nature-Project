@@ -1,15 +1,19 @@
-const express = require("express");
+const express = require('express');
 const userController = require(`${__dirname}/../controllers/userController.js`);
+const authController = require(`${__dirname}/../controllers/authController.js`);
 
 //Creating the Routes
 const router = express.Router();
 
+router.post('/signup', authController.signup);
+router.post('/login', authController.login);
+
 router
-  .route("/")
+  .route('/')
   .get(userController.getAllUsers)
   .post(userController.createUser);
 router
-  .route("/:id")
+  .route('/:id')
   .get(userController.getUser)
   .patch(userController.updateUser)
   .delete(userController.deleteUser);
