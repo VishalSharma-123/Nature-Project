@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const User = require(`${__dirname}/../models/userModels.js`);
 const catchAsync = require(`${__dirname}/../utils/catchAsync.js`);
 const AppError = require(`${__dirname}/../utils/appError.js`);
+const sendEmail = require(`${__dirname}/../utils/email.js`);
 
 const signToken = (id) => {
   return jwt.sign({ id: id }, process.env.JWT_SECRET, {
@@ -88,3 +89,60 @@ exports.protect = catchAsync(async (req, res, next) => {
   req.user = currentUser;
   next();
 });
+
+exports.restrictTo = (...roles) => {
+  return (req, res, next) => {
+    //roles is an array
+    if (!roles.includes(req.user.role)) {
+      return next(
+        new AppError('You do not have permission to perform this task', 403),
+      );
+    }
+    next();
+  };
+};
+
+exports.forgotPassword = catchAsync(async (req, res, next) => {
+  //Get user thorugh posted mail
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError('Please enter the correct email id', 404));
+  }
+
+  //Generate random reset token
+  const resetToken = user.createPasswordResetToken();
+
+  //Send it to users email
+  const resetURL = `${req.protocol}://${req.get(
+    'host',
+  )}/api/v1/users/resetPassword/${resetToken}`;
+  const message = `Forgot your password? Send a patch request with your 
+  password and confirm password on the url: ${resetURL}`;
+
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'Your reset password token (valid for 10 minutes)',
+      message,
+    });
+
+    res.status(200).json({
+      status: 'Success',
+      message: 'Token sent to email.',
+    });
+  } catch (err) {
+    (user.passwordResetToken = undefined),
+      (user.passwordResetExpires = undefined);
+    await user.save({ validateBeforeSave: false });
+    console.log(err);
+
+    return next(
+      new AppError(
+        'There was an error sending the email. Please try again later.',
+      ),
+      500,
+    );
+  }
+});
+
+exports.resetPassword = (req, res, next) => {};
