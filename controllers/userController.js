@@ -1,6 +1,7 @@
 const User = require('./../models/userModels.js');
 const catchAsync = require('./../utils/catchAsync.js');
 const AppError = require('./../utils/appError.js');
+const factory = require('./handlerFactory.js');
 
 const filterObj = (obj, ...allowedFields) => {
   const newObj = {};
@@ -13,27 +14,6 @@ const filterObj = (obj, ...allowedFields) => {
 };
 
 //ROUTE HANDLERS
-exports.getAllUsers = (req, res) => {
-  res.status(500).json({
-    status: 'Error',
-    message: 'Not yet defined',
-  });
-};
-
-exports.createUser = (req, res) => {
-  res.status(500).json({
-    status: 'Error',
-    message: 'Not yet defined',
-  });
-};
-
-exports.getUser = (req, res) => {
-  res.status(500).json({
-    status: 'Error',
-    message: 'Not yet defined',
-  });
-};
-
 exports.updateUser = (req, res) => {
   res.status(500).json({
     status: 'Error',
@@ -41,33 +21,16 @@ exports.updateUser = (req, res) => {
   });
 };
 
-exports.deleteUser = (req, res) => {
-  res.status(500).json({
-    status: 'Error',
-    message: 'Not yet defined',
-  });
+exports.getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
 };
 
-exports.updateMe = catchAsync(async (req, res, next) => {
-  //error if treis to change password
-  if (req.body.password || req.body.passwordConfirm) {
-    return next(new AppError('You cannot change your password here', 400));
-  }
-
-  //update user data
-  const filteredBody = filterObj(req.body, 'name', 'email');
-  const updateUser = await User.findByIdAndUpdate(req.user.id, filteredBody, {
-    new: true,
-    runValidators: true,
-  });
-  res.status(200).json({
-    status: 'OK',
-    data: {
-      user: updateUser,
-    },
-  });
-});
-
+exports.getAllUsers = factory.getAll(User);
+exports.createUser = factory.createOne(User);
+exports.getUser = factory.getOne(User);
+exports.deleteUser = factory.deleteOne(User);
+exports.updateMe = factory.updateOne(User);
 exports.deleteMe = catchAsync(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
   res.status(204).json({
