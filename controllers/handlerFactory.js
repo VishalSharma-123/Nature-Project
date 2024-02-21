@@ -18,7 +18,7 @@ exports.deleteOne = (Model) =>
 
 exports.updateOne = (Model) =>
   catchAsync(async (req, res, next) => {
-    const document = await Model.findByIdAndUpdate(req.params.id, req.body, {
+    const document = await Model.findByIdAndUpdate(req.user.id, req.body, {
       new: true,
       runValidators: true,
     });
@@ -30,7 +30,7 @@ exports.updateOne = (Model) =>
     res.status(200).json({
       status: 'Updated',
       data: {
-        document,
+        data: document,
       },
     });
   });
